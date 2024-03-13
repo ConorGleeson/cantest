@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\linux-can-utils",
+    "\\linux-can-utils\\include",
+    "\\linux-can-utils\\include\\linux",
+    "\\linux-can-utils\\include\\linux\\can",
+    "\\linux-can-utils\\include\\socketcan",
+    "\\linux-can-utils\\include\\socketcan\\can"
+  ],
+  "SelectedNode": "\\linux-can-utils\\cangw.c",
+  "PreviewInSolutionExplorer": false
+}
