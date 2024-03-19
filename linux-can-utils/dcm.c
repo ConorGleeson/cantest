@@ -6,6 +6,7 @@
 #include <linux/can.h>
 #include <linux/can/raw.h>
 #include "dem.h" // Include DEM module for event management
+#include <sys/ioctl.h>
 
 #define CAN_INTERFACE "can0"
 #define CAN_ID 0x123 // Example CAN ID for diagnostic messages
