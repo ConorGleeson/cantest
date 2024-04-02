@@ -2,11 +2,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <linux/if.h>
 #include <sys/socket.h>
 #include <linux/can.h>
 #include <linux/can/raw.h>
-#include "dem.h" // Include DEM module for event management
 #include <sys/ioctl.h>
+#include <stdint.h> // Include the header file for uint8_t
+
+#include "lib.h"
 
 #define CAN_INTERFACE "can0"
 #define CAN_ID 0x123 // Example CAN ID for diagnostic messages
@@ -32,7 +35,6 @@ void dcm_main(int sock) {
         receive_diagnostic_response(sock, &response_frame);
 
         // Process response data
-     
     }
 }
 
@@ -47,41 +49,4 @@ void send_diagnostic_request(int sock, const uint8_t *data, size_t len) {
         perror("write");
         exit(EXIT_FAILURE);
     }
-}
-
-// Function to receive diagnostic response over CAN
-void receive_diagnostic_response(int sock, struct can_frame *frame) {
-    if (read(sock, frame, sizeof(*frame)) != sizeof(*frame)) {
-        perror("read");
-        exit(EXIT_FAILURE);
-    }
-}
-
-int main() {
-    // Create socket
-    int sock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-    if (sock < 0) {
-        perror("socket");
-        exit(EXIT_FAILURE);
-    }
-
-    // Bind socket to CAN interface
-    struct sockaddr_can addr;
-    struct ifreq ifr;
-    strcpy(ifr.ifr_name, CAN_INTERFACE);
-    ioctl(sock, SIOCGIFINDEX, &ifr);
-    addr.can_family = AF_CAN;
-    addr.can_ifindex = ifr.ifr_ifindex;
-    if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        perror("bind");
-        exit(EXIT_FAILURE);
-    }
-
-    // Run DCM logic
-    dcm_main(sock);
-
-    // Close socket
-    close(sock);
-
-    return 0;
 }

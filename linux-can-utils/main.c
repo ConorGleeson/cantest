@@ -5,15 +5,13 @@
 
 int main() {
     // Initialize DCM and DEM modules
-    initialize_dcm();
-    initialize_dem();
+    // initialize_dcm();
+    // initialize_dem();
 
     // Run simulation app
-    main_app_logic();
+    run_simulation_app();
 
-    // Clean up resources
-    cleanup_dcm();
-    cleanup_dem();
+
 
     return 0;
 }

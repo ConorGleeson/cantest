@@ -1,12 +1,10 @@
 #include <stdio.h>
-#include <stdint.h>
-
-// Include DEM and DCM headers
 #include "dem.h"
 #include "dcm.h"
+#include "app.h"
 
 // Function to display menu options
-void display_menu() {
+static void display_menu() {
     printf("\nSimulation App Menu:\n");
     printf("1. Trigger Diagnostic Event\n");
     printf("2. View Stored Events\n");
@@ -14,11 +12,8 @@ void display_menu() {
     printf("Enter your choice: ");
 }
 
-int main() {
-    // Initialize DEM and DCM
-
-    initialize_dem();
-    initialize_dcm();
+// Main logic of the simulation app
+void run_simulation_app() {
 
     int choice;
     uint32_t event_id;
@@ -43,9 +38,8 @@ int main() {
                 // Add event to DEM
                 add_event(event_id, severity, status);
 
-                // Inform DCM about the event 
-           
-                inform_dcm(event_id);
+                // Inform DCM about the event
+               // inform_dcm(event_id);
 
                 printf("\nDiagnostic Event Triggered.\n");
                 break;
@@ -62,10 +56,4 @@ int main() {
                 break;
         }
     } while (choice != 3);
-
-  
-    cleanup_dem();
-    cleanup_dcm();
-
-    return 0;
 }
