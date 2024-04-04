@@ -8,7 +8,8 @@ static void display_menu() {
     printf("\nSimulation App Menu:\n");
     printf("1. Trigger Diagnostic Event\n");
     printf("2. View Stored Events\n");
-    printf("3. Exit\n");
+    printf("3. Send Diagnostic Request\n");
+    printf("4. Exit\n");
     printf("Enter your choice: ");
 }
 
@@ -48,6 +49,10 @@ void run_simulation_app() {
                 print_events();
                 break;
             case 3:
+            // send can message
+                send_diagnostic_request();
+                break;
+            case 4 :
                 // Exit
                 printf("\nExiting Simulation App.\n");
                 break;
@@ -55,5 +60,5 @@ void run_simulation_app() {
                 printf("\nInvalid choice. Please enter a valid option.\n");
                 break;
         }
-    } while (choice != 3);
+    } while (choice != 4);
 }
