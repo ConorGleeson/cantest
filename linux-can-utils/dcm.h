@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 
+
 // Function prototypes
 void initialize_dcm();
 void inform_dcm(uint32_t event_id);

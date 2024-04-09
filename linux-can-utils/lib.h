@@ -45,6 +45,9 @@
  *
  */
 
+#ifndef LIB_H
+#define LIB_H
+
 unsigned char asc2nibble(char c);
 /*
  * Returns the decimal value of a given ASCII hex character.
@@ -153,3 +156,5 @@ void snprintf_can_error_frame(char *buf, size_t len, struct can_frame *cf,
 /*
  * Creates a CAN error frame output in user readable format.
  */
+
+#endif /* LIB_H */

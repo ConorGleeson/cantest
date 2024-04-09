@@ -49,11 +49,11 @@ void send_diagnostic_request(int sock) {
     /* CAN message to be sent out */
     unsigned char buff[] = "7DF#0201050000000000";
 
-    // /* parse CAN frame */
-    // if (parse_canframe(buff, &frame)) {
-    //     fprintf(stderr, "\nWrong CAN-frame format!\n\n");
-    //     return;
-    // }
+    /* parse CAN frame */
+    if (parse_canframe(buff, &frame)) {
+        fprintf(stderr, "\nWrong CAN-frame format!\n\n");
+        return;
+    }
 
     /* open socket */
     if ((sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
