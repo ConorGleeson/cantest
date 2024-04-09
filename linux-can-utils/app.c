@@ -8,14 +8,13 @@ static void display_menu() {
     printf("\nSimulation App Menu:\n");
     printf("1. Trigger Diagnostic Event\n");
     printf("2. View Stored Events\n");
-    printf("3. Send Diagnostic Request\n");
+    printf("3. Wait for Diagnotic Request\n");
     printf("4. Exit\n");
     printf("Enter your choice: ");
 }
 
 // Main logic of the simulation app
 void run_simulation_app() {
-
     int choice;
     uint32_t event_id;
     uint8_t severity, status;
@@ -40,7 +39,7 @@ void run_simulation_app() {
                 add_event(event_id, severity, status);
 
                 // Inform DCM about the event
-               // inform_dcm(event_id);
+                // inform_dcm(event_id);
 
                 printf("\nDiagnostic Event Triggered.\n");
                 break;
@@ -49,7 +48,14 @@ void run_simulation_app() {
                 print_events();
                 break;
             case 3:
-            // send can message
+                // Continuously receive diagnostic request until a message is received
+                while (1) {
+                    if (receive_diagnostic_request() != 0) {
+                        // If a message is received, break the loop and proceed to sending the diagnostic request
+                        break;
+                    }
+                }
+                // Send diagnostic request
                 send_diagnostic_request();
                 break;
             case 4 :

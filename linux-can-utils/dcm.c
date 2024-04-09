@@ -16,28 +16,67 @@
 
 // Function prototypes
 void send_diagnostic_request(int sock);
-void receive_diagnostic_response(int sock, struct can_frame *frame);
+int receive_diagnostic_request(int sock);
 
 // DCM logic
 void dcm_main(int sock) {
     // Main loop for handling diagnostic requests
     while (1) {
         // Wait for diagnostic request from CANoe simulation
-        // For simplicity, assume request data is already prepared
-        // uint8_t request_data[] = {0x01, 0x02, 0x03}; // Example request data
-        // size_t request_data_len = sizeof(request_data);
+        
 
-        // Send diagnostic request
+        // Send diagnostic response
         send_diagnostic_request(sock);
 
-        // Receive diagnostic response
+        // Receive diagnostic request
         struct can_frame response_frame;
-       // receive_diagnostic_response(sock, &response_frame);
+        receive_diagnostic_request(sock);
 
-        // Process response data
     }
 }
 
+
+// Function to receive diagnostic request over CAN
+int receive_diagnostic_request(int sock) {
+    int nbytes;
+    struct sockaddr_can addr;
+    struct can_frame frame;
+    struct ifreq ifr;
+
+    if ((sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
+        perror("socket");
+        return 0;
+    }
+
+    strcpy(ifr.ifr_name, CAN_INTERFACE);
+    ioctl(sock, SIOCGIFINDEX, &ifr);
+
+    memset(&addr, 0, sizeof(addr));
+    addr.can_family = AF_CAN;
+    addr.can_ifindex = ifr.ifr_ifindex;
+
+    if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        perror("bind");
+        return 0;
+    }
+
+    nbytes = read(sock, &frame, sizeof(struct can_frame));
+
+    if (nbytes < 0) {
+        perror("read");
+        return 0;
+    }
+
+    // Process received CAN frame
+    printf("Received CAN Frame: ID=%X DLC=%d Data=", frame.can_id, frame.can_dlc);
+    for (int i = 0; i < frame.can_dlc; i++) {
+        printf("%02X ", frame.data[i]);
+    }
+    printf("\n");
+
+   // close(sock);
+    return 1; // Message received
+}
 // Function to send diagnostic request over CAN
 void send_diagnostic_request(int sock) {
     //int sock; /* can raw socket */ 
