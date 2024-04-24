@@ -15,4 +15,6 @@ void send_diagnostic_request();
 int receive_diagnostic_request();
 void cleanup_dcm();
 
+
+
 #endif /* DCM_H */

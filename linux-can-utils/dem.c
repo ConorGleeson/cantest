@@ -24,6 +24,10 @@ int get_hardcoded_did_count() {
     return sizeof(hardcoded_dids) / sizeof(hardcoded_dids[0]);
 }
 
+const HardcodedDIDs* get_hardcoded_dids_for_dcm() {
+    return hardcoded_dids;
+}
+
 DemEvent dem_events[MAX_EVENTS];
 int dem_event_count = 0;
 

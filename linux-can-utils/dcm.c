@@ -1,3 +1,4 @@
+#include "dem.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,30 +12,32 @@
 
 #include "lib.h"
 
+
 #define CAN_INTERFACE "can0"
 #define CAN_ID 0x123 // Example CAN ID for diagnostic messages
 
 // Function prototypes
-void send_diagnostic_request(int sock);
+void send_diagnostic_request(int sock, const HardcodedDIDs *hardcoded_dids, int num_dids);
 int receive_diagnostic_request(int sock);
+
+
 
 // DCM logic
 void dcm_main(int sock) {
+    // Initialize DEM with predefined DIDs
+    initialize_dem();
+   
+    const HardcodedDIDs* hardcoded_dids = get_hardcoded_dids_for_dcm();
+    int num_dids = get_hardcoded_did_count(); // Get the number of DIDs
+
     // Main loop for handling diagnostic requests
     while (1) {
-        // Wait for diagnostic request from CANoe simulation
-        
-
-        // Send diagnostic response
-        send_diagnostic_request(sock);
-
+        // Send diagnostic response with the list of DIDs
+        send_diagnostic_request(sock, hardcoded_dids, num_dids); 
         // Receive diagnostic request
-        struct can_frame response_frame;
         receive_diagnostic_request(sock);
-
     }
 }
-
 
 // Function to receive diagnostic request over CAN
 int receive_diagnostic_request(int sock) {
@@ -78,23 +81,12 @@ int receive_diagnostic_request(int sock) {
     return 1; // Message received
 }
 // Function to send diagnostic request over CAN
-void send_diagnostic_request(int sock) {
-    //int sock; /* can raw socket */ 
+void send_diagnostic_request(int sock, const HardcodedDIDs *hardcoded_dids, int num_dids) {
     int nbytes;
     struct sockaddr_can addr;
     struct can_frame frame;
     struct ifreq ifr;
 
-    /* CAN message to be sent out */
-    unsigned char buff[] = "7DF#0201050000000000";
-
-    /* parse CAN frame */
-    if (parse_canframe(buff, &frame)) {
-        fprintf(stderr, "\nWrong CAN-frame format!\n\n");
-        return;
-    }
-
-    /* open socket */
     if ((sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
         perror("socket");
         return;
@@ -110,28 +102,28 @@ void send_diagnostic_request(int sock) {
     }
     addr.can_ifindex = ifr.ifr_ifindex;
 
-    /* disable default receive filter on this RAW socket */
-    //setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, NULL, 0);
-
     if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         perror("bind");
         close(sock);
         return;
     }
 
-    int i =0;
+    // Construct and send CAN frames for each DID
+    for (int i = 0; i < num_dids; i++) {
+        // Construct CAN frame for the current DID
+        frame.can_id = hardcoded_dids[i].event_id;
+        frame.can_dlc = 4; // Length of data (bytes)
 
-    /* send frame */
-	for(i=0;i<100;i++)
-	{
-		if ((nbytes = write(sock, &frame, sizeof(frame))) != sizeof(frame)) {
-			perror("write");
-			//return 1;
-		}
-		
-		fprintf(stderr, "%d \n", i);
+        // Copy positive response data into the frame
+        for (int j = 0; j < 4; j++) {
+            frame.data[j] = hardcoded_dids[i].positive_response[j];
+        }
 
-		usleep(10000); /* Delay before next loop */
-	}
+        // Send the CAN frame
+        if ((nbytes = write(sock, &frame, sizeof(frame))) != sizeof(frame)) {
+            perror("write");
+        }
+    }
+
     close(sock);
 }

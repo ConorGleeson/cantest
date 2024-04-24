@@ -18,9 +18,12 @@ typedef struct {
 // Hardcoded list of DIDs and their responses
 typedef struct {
     uint32_t event_id;
-    uint8_t positive_response[4]; // Positive response format: [62, 00, DID, value]
+    uint8_t positive_response[4]; // Positive response format: [62, 00, DID, value] from candelastudio
 } HardcodedDIDs;
 HardcodedDIDs get_hardcoded_did(int index);
+
+// Function prototype to get the array of DIDs
+const HardcodedDIDs* get_hardcoded_dids_for_dcm();
 
 int get_hardcoded_did_count();
 

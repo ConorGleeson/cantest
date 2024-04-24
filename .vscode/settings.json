@@ -4,6 +4,7 @@
         "ioctl.h": "c",
         "raw.h": "c",
         "if.h": "c",
-        "lib.h": "c"
+        "lib.h": "c",
+        "stdint.h": "c"
     }
 }
