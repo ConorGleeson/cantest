@@ -1,0 +1,216 @@
+﻿/*@!Encoding:65001*/
+
+includes{
+  
+ //  #include <string.h> // Include for string manipulation functions
+}    
+
+variables
+{
+  // Define variables to store button and temperature dial states
+  int EVSwitchStatusHVAC;
+  int AirLowerSwitchStatusHVAC;
+  int AirRaiseSwitchStatusHVAC;
+  int FrontTSetRightCmd;
+  int FrontTSetLeftCmd;
+  int DirectionIndicationINST =0; 
+  int DirectionIndicationINST_UB =1;
+  
+  // Define variables for Morse code signaling
+  int dotDuration = 500; // Default dot duration in milliseconds
+  int messageID = -1; // 0 for SOS, 1 for KIDNAPPED, 2 for SEND 007, -1 for  no message 
+
+
+  int morseIndex = 0; // Index for tracking Morse code signals
+  int morseSignal[26]; // Array to store Morse code signals (may need to adjust size)
+  
+  
+  // Define Morse code signals using 0 for dot and 1 for dash
+  int morseSOS[9] = {0,0,0,1,1,1,0,0,0}; // SOS
+  int morseKIDNAPPED[16] = {1,0,1,0,1,0,1,0,0,1,0,1,0,1,0,1}; // KIDNAPPED
+  int morseSEND007[26] = {0,0,0,1,0,0,1,0,0,1,0,0,1,1,1,1,1,1,1,1,0,0,1,0,1,1}; // SEND 007
+  
+ // timer MorseTimer; 
+  timer EVTimer;
+  mstimer MorseTimer;
+}
+
+on start{
+  DirectionIndicationINST_UB = 1; 
+  @sysvar::indicatorOnOf =0; 
+  DirectionIndicationINST = 0; 
+  EVSwitchStatusHVAC =0; 
+}
+
+
+on message HVAC_8 {
+  // Read button states
+  EVSwitchStatusHVAC = this.EVSwitchStatusHVAC;
+  AirLowerSwitchStatusHVAC = this.AirLowerSwitchStatusHVAC;
+  AirRaiseSwitchStatusHVAC = this.AirRaiseSwitchStatusHVAC;
+
+  // Check if the EV button is pressed
+  if (EVSwitchStatusHVAC == 1) {
+    write("Ev pressed");
+    // Start the EV timer if it's not already running
+    if (!isTimerActive(EVTimer)) {
+      setTimer(EVTimer, 2); // Start the timer for 2000 milliseconds (2 seconds)
+    }
+  } else {
+    // If EV button is released, stop the EV timer
+    if (isTimerActive(EVTimer)) {
+      cancelTimer(EVTimer);
+      // Clear any ongoing Morse code signal
+      clearMorseSignal();
+    }
+  }
+
+  // Check if the "Lower Suspension" button is pressed
+  if (AirLowerSwitchStatusHVAC == 1) {
+    // Increase dot duration (slower rate)
+    dotDuration = 750; // Set dot duration to slow speed (750 ms)
+  }
+  
+  // Check if the "Raise Suspension" button is pressed
+  if (AirRaiseSwitchStatusHVAC == 1) {
+    // Reduce dot duration (faster rate)
+    dotDuration = 250; // Set dot duration to fast speed (250 ms)
+  }
+
+  // Check if Morse signals are being sent and EV button is pressed again
+  if (isTimerActive(MorseTimer) && EVSwitchStatusHVAC == 1) {
+    // Stop the ongoing Morse signals
+    clearMorseSignal();
+  }
+}
+
+on timer EVTimer
+{
+  
+  // Check if the EV button has been pressed for at least 2 seconds
+  if (EVSwitchStatusHVAC == 1)
+  {
+    write("Ev timer held for 2 secs");
+    write("Speed Chosen: %d\n", dotDuration);
+    // Check message selection based on temperature dials
+    if (FrontTSetLeftCmd < FrontTSetRightCmd){
+      messageID = 0; // SOS
+      write("SOS");
+      }
+    else if (FrontTSetLeftCmd == FrontTSetRightCmd){
+      messageID = 1; // KIDNAPPED
+      write("Kidnapped");
+      }
+    else {
+      messageID = 2; // SEND 007
+      write("Send 007");
+      }
+    
+    
+    //start sending morse code
+    startMorseSignal(); 
+
+  }
+}
+
+on message HVAC_6
+{
+  // Read temperature dial states
+  FrontTSetRightCmd = this.FrontTSetRightCmd;
+  FrontTSetLeftCmd = this.FrontTSetLeftCmd;
+  write("FrontTSetRightCmd: ", FrontTSetRightCmd);
+  write("FrontTSetLeftCmd: ", FrontTSetLeftCmd);
+}
+
+
+
+
+on timer MorseTimer {
+  // Turn off the indicator
+  turnIndicatorOff();
+
+  // Increment Morse code index
+  morseIndex++;
+
+  // Check if end of message is reached
+  if (morseIndex >= elCount(morseSignal)) {
+    // Restart Morse code signaling if the feature is still enabled
+    if (EVSwitchStatusHVAC == 1) {
+      morseIndex = 0;
+      // Add a delay before restarting the Morse signal
+      setTimer(MorseTimer, dotDuration * 3); 
+      write(" ");
+       @sysvar::indicatorOnOf =0;
+    } else {
+      // If feature is disabled, stop Morse code signaling
+      clearMorseSignal();
+    }
+  } else {
+    // Toggle indicator based on Morse code signal
+    if (morseSignal[morseIndex] == 0) {
+      // Turn on indicator for dot duration
+      turnOnIndicator();
+      write(".");
+      @sysvar::indicatorOnOf =1;
+      setTimer(MorseTimer, dotDuration);
+      @sysvar:: indicatorOnOf =0;
+      turnIndicatorOff();
+      
+    } else if (morseSignal[morseIndex] == 1) {
+      // Turn on indicator for three times the dot duration for dash
+      turnOnIndicator();
+      write("-");
+      @sysvar::indicatorOnOf =1; 
+      setTimer(MorseTimer, dotDuration * 3);
+      @sysvar::indicatorOnOf =1; 
+      turnIndicatorOff(); 
+    }
+  }
+}
+
+
+
+
+
+
+void copyArray(int dest[], int src[], int size) {
+  int i;
+  for ( i = 0; i < size; i++) {
+    dest[i] = src[i];
+  }
+}
+
+// Function to start Morse code signal
+void startMorseSignal(){
+  write("Starting Morse");
+  switch (messageID) {
+    case 0: copyArray(morseSignal, morseSOS, elCount(morseSOS)); break;
+    case 1: copyArray(morseSignal, morseKIDNAPPED, elCount(morseKIDNAPPED)); break;
+    case 2: copyArray(morseSignal, morseSEND007, elCount(morseSEND007)); break;
+  }
+  
+  // Start timer for first dot duration
+  write("setting morese timer");
+  setTimer(MorseTimer, dotDuration);
+}
+
+// Function to stop Morse code signal and clear message ID
+void clearMorseSignal() {
+  messageID = -1; // Reset message ID
+  morseIndex = 0; // Reset morse index
+}
+
+
+
+void turnOnIndicator(){
+  DirectionIndicationINST = 3; 
+ // @sysvar::indicatorOnOf = 1; // Update the system variable to indicate the indicator is on
+}
+
+void turnIndicatorOff(){
+  DirectionIndicationINST = 0; 
+  //@sysvar::indicatorOnOf = 0; // Update the system variable to indicate the indicator is off
+}
+
+
+
