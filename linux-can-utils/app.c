@@ -2,10 +2,6 @@
 #include "dem.h"
 #include "dcm.h"
 #include "app.h"
-#include "dem.c"
-
-
-
 
 // Main logic of the simulation app
 void display_menu() {
@@ -30,16 +26,19 @@ void run_simulation_app() {
         scanf("%d", &choice);
 
         switch (choice) {
-            case 1:
+           case 1:
                 // Select DID to change status
                 printf("\nSelect a DID to change its status:\n");
-                for (int i = 0; i < sizeof(hardcoded_dids) / sizeof(hardcoded_dids[0]); i++) {
-                    printf("%d. DID 0x%02X\n", i + 1, hardcoded_dids[i].event_id);
+                for (int i = 0; i < get_hardcoded_did_count(); i++) {
+                    HardcodedDIDs did = get_hardcoded_did(i);
+                    if (did.event_id != 0) {
+                        printf("%d. DID 0x%02X\n", i + 1, did.event_id);
+                    }
                 }
                 printf("Enter your choice: ");
                 scanf("%d", &choice);
-                if (choice >= 1 && choice <= sizeof(hardcoded_dids) / sizeof(hardcoded_dids[0])) {
-                    selected_did = hardcoded_dids[choice - 1].event_id;
+                if (choice >= 1 && choice <= get_hardcoded_did_count()) {
+                    selected_did = get_hardcoded_did(choice - 1).event_id;
                     printf("\nEnter new status value (0 or 1): ");
                     scanf("%hhu", &new_status);
                     update_soc_value(selected_did, new_status);
@@ -62,7 +61,7 @@ void run_simulation_app() {
                 // Send diagnostic request
                 send_diagnostic_request();
                 break;
-            case 4 :
+            case 4:
                 // Exit
                 printf("\nExiting Simulation App.\n");
                 break;

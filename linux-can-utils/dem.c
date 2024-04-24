@@ -3,19 +3,26 @@
 
 #define MAX_EVENTS 100
 
-// Event structure
-typedef struct {
-    uint32_t event_id;
-    uint8_t status;
-} DemEvent;
+
 
 // Hardcoded list of DIDs and their responses
-static const struct {
-    uint32_t event_id;
-    uint8_t positive_response[4]; // Positive response format: [62, 00, DID, value]
-} hardcoded_dids[] = {
+const HardcodedDIDs hardcoded_dids[] = {
     {0x9A, {0x62, 0x00, 0x9A, 0x00}}, // EV Charging State: 0x9A, value: 0 (off)
 };
+
+HardcodedDIDs get_hardcoded_did(int index) {
+    if (index >= 0 && index < sizeof(hardcoded_dids) / sizeof(hardcoded_dids[0])) {
+        return hardcoded_dids[index];
+    } else {
+        HardcodedDIDs empty_did = {0, {0}}; // Return an empty struct if index is out of bounds
+        return empty_did;
+    }
+}
+
+int get_hardcoded_did_count() {
+    // Calculate the size of the hardcoded_dids array
+    return sizeof(hardcoded_dids) / sizeof(hardcoded_dids[0]);
+}
 
 DemEvent dem_events[MAX_EVENTS];
 int dem_event_count = 0;
