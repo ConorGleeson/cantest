@@ -2,46 +2,50 @@
 #include "dem.h"
 #include "dcm.h"
 #include "app.h"
+#include "dem.c"
 
-// Function to display menu options
-static void display_menu() {
+
+
+
+// Main logic of the simulation app
+void display_menu() {
     printf("\nSimulation App Menu:\n");
-    printf("1. Trigger Diagnostic Event\n");
+    printf("1. Select DID to Change Status\n");
     printf("2. View Stored Events\n");
-    printf("3. Wait for Diagnotic Request\n");
+    printf("3. Send Diagnostic Request\n");
     printf("4. Exit\n");
     printf("Enter your choice: ");
 }
 
-// Main logic of the simulation app
 void run_simulation_app() {
     int choice;
-    uint32_t event_id;
-    uint8_t severity, status;
+    uint32_t selected_did;
+    uint8_t new_status;
 
-    // Main loop for the simulation app
+    // Initialize DEM with predefined DIDs
+    initialize_dem();
+
     do {
-        // Display menu
         display_menu();
         scanf("%d", &choice);
 
         switch (choice) {
             case 1:
-                // Trigger Diagnostic Event
-                printf("\nEnter Event ID: ");
-                scanf("%u", &event_id);
-                printf("Enter Severity: ");
-                scanf("%hhu", &severity);
-                printf("Enter Status: ");
-                scanf("%hhu", &status);
-
-                // Add event to DEM
-                add_event(event_id, severity, status);
-
-                // Inform DCM about the event
-                // inform_dcm(event_id);
-
-                printf("\nDiagnostic Event Triggered.\n");
+                // Select DID to change status
+                printf("\nSelect a DID to change its status:\n");
+                for (int i = 0; i < sizeof(hardcoded_dids) / sizeof(hardcoded_dids[0]); i++) {
+                    printf("%d. DID 0x%02X\n", i + 1, hardcoded_dids[i].event_id);
+                }
+                printf("Enter your choice: ");
+                scanf("%d", &choice);
+                if (choice >= 1 && choice <= sizeof(hardcoded_dids) / sizeof(hardcoded_dids[0])) {
+                    selected_did = hardcoded_dids[choice - 1].event_id;
+                    printf("\nEnter new status value (0 or 1): ");
+                    scanf("%hhu", &new_status);
+                    update_soc_value(selected_did, new_status);
+                } else {
+                    printf("Invalid choice!\n");
+                }
                 break;
             case 2:
                 // View Stored Events
